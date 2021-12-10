@@ -1,7 +1,6 @@
 #!/usr/bin/python
 
-import sys
-import requests
+from aocd import lines
 import math
 
 
@@ -13,27 +12,12 @@ test_data = [
     '9899965678'
 ]
 
-heat_map = {}
-
-
-def determine_question():
-    return map(int, sys.argv[1].split('.'))
-
-
-def fetch_data(day):
-    cookie = '53616c7465645f5fa5d68c2c74333c3cf12f7d3fd1879c09c13156e540110a1ab1c384fc44a06720c841e41aa6ec5668'
-    target_url = f"https://adventofcode.com/2021/day/{day}/input"
-    session = requests.Session()
-    return session.get(
-        target_url, cookies={'session': cookie}
-    ).text.strip().split('\n')
-
 
 def parse_heat_map(data):
     return [list(line) for line in data]
 
 
-def get_surrounding_points(x, y):
+def get_surrounding_points(x, y, heat_map):
     surrounding_points = []
     if x > 0:
         # left
@@ -50,23 +34,23 @@ def get_surrounding_points(x, y):
     return surrounding_points
 
 
-def is_low_point(x, y):
+def is_low_point(x, y, heat_map):
     curr_value = int(heat_map[x][y])
-    surrounding_points = get_surrounding_points(x, y)
+    surrounding_points = get_surrounding_points(x, y, heat_map)
     surrounding_values = [int(heat_map[x][y]) for x, y in surrounding_points]
     return all([curr_value < x for x in surrounding_values])
 
 
-def get_low_points():
+def get_low_points(heat_map):
     low_points = []
     for x in range(len(heat_map)):
         for y in range(len(heat_map[x])):
-            if is_low_point(x, y):
+            if is_low_point(x, y, heat_map):
                 low_points.append((x, y))
     return low_points
 
 
-def calculate_total_risk_level(low_points):
+def calculate_total_risk_level(low_points, heat_map):
     total_risk_level = 0
     for x, y in low_points:
         risk_level = int(heat_map[x][y]) + 1
@@ -74,21 +58,21 @@ def calculate_total_risk_level(low_points):
     return total_risk_level
 
 
-def find_basins(low_points):
+def find_basins(low_points, heat_map):
     return [
-        len(expand_basin(x, y, set()))
+        len(expand_basin(x, y, set(), heat_map))
         for x, y in low_points
     ]
 
 
-def expand_basin(x, y, basin_points):
+def expand_basin(x, y, basin_points, heat_map):
     # add current point to basin
     basin_points.add((x, y))
 
     # get surrounding points
     curr_value = int(heat_map[x][y])
     surrounding_points = [
-        (i, j) for i, j in get_surrounding_points(x, y)
+        (i, j) for i, j in get_surrounding_points(x, y, heat_map)
         if curr_value < int(heat_map[i][j]) < 9
     ]
 
@@ -97,24 +81,26 @@ def expand_basin(x, y, basin_points):
         basin_points.update(surrounding_points)
         for x, y in surrounding_points:
             # explore surrounding points
-            expand_basin(x, y, basin_points)
+            expand_basin(x, y, basin_points, heat_map)
 
     return basin_points
 
 
-if __name__ == '__main__':
-    day, part = determine_question()
-    data = fetch_data(day)
-
-    if 'test' in sys.argv:
-        data = test_data
-
+def main(data, part):
     heat_map = parse_heat_map(data)
+    low_points = get_low_points(heat_map)
 
-    low_points = get_low_points()
     if part == 1:
-        total_risk_level = calculate_total_risk_level(low_points)
-        print(total_risk_level)
+        return calculate_total_risk_level(low_points, heat_map)
     elif part == 2:
-        basins = sorted(find_basins(low_points), reverse=True)
-        print(math.prod(basins[:3]))
+        basins = sorted(find_basins(low_points, heat_map), reverse=True)
+        return math.prod(basins[:3])
+
+
+if __name__ == '__main__':
+
+    # test
+    print(f'Test Data: Part 1 {main(test_data, 1)}, Part 2 {main(test_data, 2)}')
+
+    # question
+    print(f'Day 9: Part 1 {main(lines, 1)}, Part 2 {main(lines, 2)}')

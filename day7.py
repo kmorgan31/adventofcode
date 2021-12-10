@@ -1,21 +1,7 @@
 #!/usr/bin/python
 
-import sys
-import requests
+from aocd import lines
 import math
-
-
-def determine_question():
-    return map(int, sys.argv[1].split('.'))
-
-
-def fetch_data(day):
-    cookie = '53616c7465645f5fa5d68c2c74333c3cf12f7d3fd1879c09c13156e540110a1ab1c384fc44a06720c841e41aa6ec5668'
-    target_url = f"https://adventofcode.com/2021/day/{day}/input"
-    session = requests.Session()
-    return session.get(
-        target_url, cookies={'session': cookie}
-    ).text.strip().split('\n')
 
 
 def get_fuel(num, part):
@@ -27,12 +13,7 @@ def get_fuel(num, part):
         return num * (num + 1) // 2
 
 
-if __name__ == '__main__':
-    day, part = determine_question()
-
-    data = fetch_data(day)
-    crab_positions = [x for x in map(int, data[0].split(','))]
-
+def main(crab_positions, part):
     lowest = math.inf
     leftmost_crab, rightmost_crab = min(crab_positions), max(crab_positions)
 
@@ -43,4 +24,10 @@ if __name__ == '__main__':
         ])
         if fuel < lowest:
             lowest = fuel
-    print(lowest)
+
+    return lowest
+
+
+if __name__ == '__main__':
+    crab_positions = [x for x in map(int, lines[0].split(','))]
+    print(f'Day 7: Part 1 {main(crab_positions, 1)}, Part 2 {main(crab_positions, 2)}')

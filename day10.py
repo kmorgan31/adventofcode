@@ -1,7 +1,6 @@
 #!/usr/bin/python
 
-import sys
-import requests
+from aocd import lines
 from statistics import median
 
 
@@ -19,17 +18,20 @@ test_data = [
 ]
 
 
-def determine_question():
-    return map(int, sys.argv[1].split('.'))
+corrupted_points_dict = {
+    ')': 3,
+    ']': 57,
+    '}': 1197,
+    '>': 25137,
+}
 
 
-def fetch_data(day):
-    cookie = '53616c7465645f5fa5d68c2c74333c3cf12f7d3fd1879c09c13156e540110a1ab1c384fc44a06720c841e41aa6ec5668'
-    target_url = f"https://adventofcode.com/2021/day/{day}/input"
-    session = requests.Session()
-    return session.get(
-        target_url, cookies={'session': cookie}
-    ).text.strip().split('\n')
+incomplete_points_dict = {
+    ')': 1,
+    ']': 2,
+    '}': 3,
+    '>': 4
+}
 
 
 def check_if_corrupted(line, chunk_dict):
@@ -49,30 +51,10 @@ def check_if_corrupted(line, chunk_dict):
     return 0, chunk_stack
 
 
-if __name__ == '__main__':
-    day, part = determine_question()
-    data = fetch_data(day)
-
-    if 'test' in sys.argv:
-        data = test_data
-
+def main(data, part=0):
     opening_chars = ['(', '[', '{', '<']
     closing_chars = [')', ']', '}', '>']
     chunk_dict = dict(zip(opening_chars, closing_chars))
-
-    corrupted_points_dict = {
-        ')': 3,
-        ']': 57,
-        '}': 1197,
-        '>': 25137,
-    }
-
-    incomplete_points_dict = {
-        ')': 1,
-        ']': 2,
-        '}': 3,
-        '>': 4
-    }
 
     corrupted_score = 0
     incomplete_scores = []
@@ -94,5 +76,16 @@ if __name__ == '__main__':
             # add line points to incomplete scores
             incomplete_scores.append(line_points)
 
-    print(corrupted_score)
-    print(median(incomplete_scores))
+    if part == 1:
+        return corrupted_score
+    elif part == 2:
+        return median(incomplete_scores)
+
+
+if __name__ == '__main__':
+
+    # test
+    print(f'Test Data: Part 1 {main(test_data, 1)}, Part 2 {main(test_data, 2)}')
+
+    # question
+    print(f'Day 10: Part 1 {main(lines, 1)}, Part 2 {main(lines, 2)}')

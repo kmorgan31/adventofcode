@@ -1,21 +1,6 @@
 #!/usr/bin/python
 
-import sys
-import requests
-from collections import defaultdict
-
-
-def determine_question():
-    return map(int, sys.argv[1].split('.'))
-
-
-def fetch_data(day):
-    cookie = '53616c7465645f5fa5d68c2c74333c3cf12f7d3fd1879c09c13156e540110a1ab1c384fc44a06720c841e41aa6ec5668'
-    target_url = f"https://adventofcode.com/2021/day/{day}/input"
-    session = requests.Session()
-    return session.get(
-        target_url, cookies={'session': cookie}
-    ).text.strip().split('\n')
+from aocd import lines
 
 
 def parse_coords(data):
@@ -49,19 +34,14 @@ def determine_points(a, b):
     return points
 
 
-if __name__ == '__main__':
-    day, part = determine_question()
-
-    data = fetch_data(day)
-    coords = parse_coords(data)
-
+def main(coords, part):
     floor_map = {}
-    for a,b in coords:
+    for a, b in coords:
         if part == 1:
             if a[0] != b[0] and a[1] != b[1]:
                 continue
 
-        points = determine_points(a,b)
+        points = determine_points(a, b)
         if not points:
             continue
 
@@ -71,8 +51,12 @@ if __name__ == '__main__':
             else:
                 floor_map[point] = 1
 
-    overlap = {
-        k for k,v in floor_map.items() if v >= 2
+    return {
+        k for k, v in floor_map.items() if v >= 2
     }
-    print(overlap)
-    print(len(overlap))
+
+
+if __name__ == '__main__':
+    coords = parse_coords(lines)
+
+    print(f'Day 5: Part 1 {len(main(coords, 1))}, Part 2 {len(main(coords, 2))}')

@@ -1,20 +1,6 @@
 #!/usr/bin/python
 
-import sys
-import requests
-
-
-def determine_question():
-    return map(int, sys.argv[1].split('.'))
-
-
-def fetch_data(day):
-    cookie = '53616c7465645f5fa5d68c2c74333c3cf12f7d3fd1879c09c13156e540110a1ab1c384fc44a06720c841e41aa6ec5668'
-    target_url = f"https://adventofcode.com/2021/day/{day}/input"
-    session = requests.Session()
-    return session.get(
-        target_url, cookies={'session': cookie}
-    ).text.strip().split('\n')
+from aocd import lines
 
 
 def split_data(data, idx):
@@ -64,20 +50,22 @@ def flip_bits(num):
     return ''.join([dct[x] for x in num])
 
 
-if __name__ == '__main__':
-    day, part = determine_question()
-
-    data = fetch_data(day)
+def part_1(data):
     byte_length = len(data[0])
+    gamma_rate = determine_gamma_rate(data, 0, byte_length)
 
-    if part == 1:
-        gamma_rate = determine_gamma_rate(data, 0, byte_length)
+    epsilon_rate = int(flip_bits(gamma_rate), 2)
+    gamma_rate = int(gamma_rate, 2)
+    return gamma_rate * epsilon_rate
 
-        epsilon_rate = int(flip_bits(gamma_rate), 2)
-        gamma_rate = int(gamma_rate, 2)
-        print(gamma_rate * epsilon_rate)
 
-    elif part == 2:
-        oxygen_rate = int(determine_oygen_rate(data, 0), 2)
-        co2_rate = int(determine_co2_rate(data, 0), 2)
-        print(oxygen_rate * co2_rate)
+def part_2(data):
+    oxygen_rate = int(determine_oygen_rate(data, 0), 2)
+    co2_rate = int(determine_co2_rate(data, 0), 2)
+    return oxygen_rate * co2_rate
+
+
+if __name__ == '__main__':
+    byte_length = len(lines[0])
+    print(f'Day 3: Part 1 {part_1(lines)}, Part 2 {part_2(lines)}')
+
