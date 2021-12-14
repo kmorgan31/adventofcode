@@ -112,4 +112,4 @@ if __name__ == '__main__':
     print(f'Test Data: Part 1 {main(test_data, 1)}, Part 2 {main(test_data, 2)}')
 
     # question
-    print(f'Day 12: Part 1 {main(lines, 1)}, Part 2 {main(lines, 2)}')
+    print(f'Day 13: Part 1 {main(lines, 1)}, Part 2 {main(lines, 2)}')
