@@ -30,37 +30,41 @@ class Cavern():
     def __init__(self, part):
         self.part = part
 
-    def determine_board_size(self, data):
-        self.board_size = len(data[0])
-
     def get_cave_risk_map(self, data):
         # converts data to nested array (stores weights of each vertex)
         self.cave_risks = [[int(c) for c in line] for line in data]
+        self.board_size = len(self.cave_risks)
 
         if self.part == 2:
             # calculate risk level for extra sections
+            def get_new_risk_level(self, x, y):
+                risk_level_in_original_section = (
+                    self.cave_risks[x % self.board_size][y % self.board_size]
+                )
+                risk_level_in_current_section = (
+                    risk_level_in_original_section +
+                    (x//self.board_size) + (y//self.board_size)
+                )
+                risk_level_in_current_section = risk_level_in_current_section % 9
+                if not risk_level_in_current_section:
+                    # risk level does not reset to 0
+                    risk_level_in_current_section = 9
+                return risk_level_in_current_section
+
+            # initialize board for new size
             new_cave_risks = [
-                ['.' for x in range(self.board_size * 5)] for y in range(self.board_size * 5)
+                [
+                    '.' for x in range(self.board_size * 5)
+                ] for y in range(self.board_size * 5)
             ]
 
+            # update board size
             for x in range(self.board_size * 5):
                 for y in range(self.board_size * 5):
-                    risk_level_in_original_section = (
-                        self.cave_risks[x % self.board_size][y % self.board_size]
-                    )
-                    risk_level_in_current_section = (
-                        risk_level_in_original_section +
-                        (x//self.board_size) + (y//self.board_size)
-                    )
-                    risk_level_in_current_section = risk_level_in_current_section % 9
-                    if not risk_level_in_current_section:
-                        # risk level does not reset to 0
-                        risk_level_in_current_section = 9
-                    new_cave_risks[x][y] = risk_level_in_current_section
+                    new_cave_risks[x][y] = get_new_risk_level(self, x, y)
 
-            # update board size
             self.cave_risks = new_cave_risks
-            self.board_size = len(new_cave_risks)
+            self.board_size = len(self.cave_risks)
 
     def get_surrounding_caves(self, cave):
         x, y = cave
@@ -80,8 +84,8 @@ class Cavern():
         caves_to_visit = PriorityQueue()
         caves_to_visit.put([0, start])
 
-        # initialize dict to store total_risk to node from start
-        total_risk_dict = {}
+        # initialize dict to store total_risk to any node from start
+        self.total_risk_dict = {}
 
         # initiate path of visited caves
         visited = set()
@@ -96,29 +100,29 @@ class Cavern():
                 return total_risk + self.cave_risks[x][y]
 
             visited.add((x, y))
+
+            # update cost to cave_to_visit (x, y)
             if (x, y) == start:
-                min_risk = 0
-                total_risk_dict[(x, y)] = 0
+                self.total_risk_dict[(x, y)] = 0
             else:
-                min_risk = sys.maxsize
-                for i, j in self.get_surrounding_caves((x, y)):
-                    if total_risk_dict.get((i, j), sys.maxsize) < min_risk:
-                        min_risk = total_risk_dict[(i, j)]
-                # update cost to cave_to_visit (x, y)
-                total_risk_dict[(x, y)] = min_risk + self.cave_risks[x][y]
+                min_risk = self.get_min_risk_to_visit_surrounding_caves((x, y))
+                self.total_risk_dict[(x, y)] = min_risk + self.cave_risks[x][y]
 
             # add cost to surrounding caves to caves_to_visit
             for i, j in self.get_surrounding_caves((x, y)):
-                caves_to_visit.put([total_risk_dict[(x, y)], (i, j)])
+                caves_to_visit.put([self.total_risk_dict[(x, y)], (i, j)])
 
-    def initialize_cavern(self, data):
-        self.determine_board_size(data)
-        self.get_cave_risk_map(data)
+    def get_min_risk_to_visit_surrounding_caves(self, cave):
+        min_risk = sys.maxsize
+        for i, j in self.get_surrounding_caves(cave):
+            if self.total_risk_dict.get((i, j), sys.maxsize) < min_risk:
+                min_risk = self.total_risk_dict[(i, j)]
+        return min_risk
 
 
 def main(data, part):
     cavern = Cavern(part)
-    cavern.initialize_cavern(data)
+    cavern.get_cave_risk_map(data)
 
     end = (cavern.board_size-1, cavern.board_size-1)
     total_risk = cavern.get_shortest_path((0, 0), end)
