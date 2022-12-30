@@ -2,8 +2,6 @@
 
 from aocd import lines
 
-from itertools import combinations
-
 
 EXAMPLE = [
     ".#.",
