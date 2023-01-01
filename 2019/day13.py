@@ -62,7 +62,6 @@ class Intcode:
             prog = str(self.instructions[self.idx]).zfill(5)
             mz, my, mx, op = list(map(int, [prog[0], prog[1], prog[2], prog[3:5]]))
 
-            # import pdb; pdb.set_trace()
             if OPS_CODES.get(op):
                 x, y, z = self.fetch_args(4)
                 self.write(
@@ -140,8 +139,6 @@ def main(data, part=None):
 
     output = intcode.run_instructions()
     while not intcode.halted:
-        # print(f"Score: {score}")
-        # if not intcode.halted:
 
         i = 0
         while i in range(len(output)):
@@ -160,7 +157,6 @@ def main(data, part=None):
                 inp = -1
             else:
                 inp = 0
-            # print(f"Joystick: {inp}")
 
             output = intcode.run_instructions(inp)
 
@@ -177,5 +173,5 @@ def main(data, part=None):
 
 
 if __name__ == '__main__':
-    # print(f'Part 1 {main(lines, 1)}')
+    print(f'Part 1 {main(lines, 1)}')
     print(f'Part 2 {main(lines, 2)}')

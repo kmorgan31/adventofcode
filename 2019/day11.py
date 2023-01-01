@@ -61,7 +61,6 @@ class Intcode:
             prog = str(self.instructions[self.idx]).zfill(5)
             mz, my, mx, op = list(map(int, [prog[0], prog[1], prog[2], prog[3:5]]))
 
-            # import pdb; pdb.set_trace()
             if OPS_CODES.get(op):
                 x, y, z = self.fetch_args(4)
                 self.write(
