@@ -15,6 +15,7 @@ class Intcode:
         self.extra_memory = {}
         self.instructions = instructions
         self.inputs = inputs or []
+        self.waiting = False
 
     @property
     def halted(self):
@@ -31,7 +32,10 @@ class Intcode:
 
     def add_input(self, inp):
         if inp is not None:
-            self.inputs.append(inp)
+            if type(inp) == int:
+                self.inputs.append(inp)
+            elif type(inp) == list:
+                self.inputs.extend(inp)
 
     def fetch(self, idx):
         return (
