@@ -10,11 +10,11 @@ OPS_CODES = {
 class Intcode:
 
     def __init__(self, instructions, inputs=None):
-        self.instructions = instructions
-        self.inputs = inputs or []
         self.idx = 0
         self.relative_base = 0
         self.extra_memory = {}
+        self.instructions = instructions
+        self.inputs = inputs or []
 
     @property
     def halted(self):
@@ -23,6 +23,7 @@ class Intcode:
     def copy(self):
         copy = Intcode(self.instructions[:])
         copy.inputs = self.inputs[:]
+
         copy.idx = self.idx
         copy.relative_base = self.relative_base
         copy.extra_memory = self.extra_memory.copy()

@@ -8,16 +8,22 @@ from intcode import Intcode
 def get_surrounding_points(pos):
     x, y = pos
     return [
-        (x-1, y),   # N
-        (x, y+1),   # E
-        (x+1, y),   # S
-        (x, y-1)    # W
+        (x, y-1),   # N
+        (x, y+1),   # S
+        (x-1, y),   # W
+        (x+1, y)    # E
     ]
 
 
 def print_map(visited, pos=None, to_visit=None):
     xvals = [x[0] for x in visited]
     yvals = [x[1] for x in visited]
+
+    dct = {
+        0: "#",
+        1: ".",
+        2: "O"
+    }
 
     for x in range(min(xvals)-1, max(xvals)+2):
         line = ""
@@ -29,18 +35,16 @@ def print_map(visited, pos=None, to_visit=None):
                 line += str(to_visit.index((x, y)))
             elif (x,y) == (0,0):
                 line += "S"
-            elif val == 0:
-                line += "#"
-            elif val == 1:
-                line += "."
+            elif val is not None:
+                line += dct.get(val, val)
             else:
                 line += " "
         print(line)
 
 
-def navigate_map(points):
+def navigate_map(points, start):
     visited = set()
-    to_visit = [((0, 0), 0)]
+    to_visit = [(start, 0)]
 
     while to_visit:
         pos, step = to_visit.pop(0)
@@ -52,9 +56,30 @@ def navigate_map(points):
                 # get item at point
                 point = points.get(sp, 0)
                 if point == 2:
-                    return step+1
+                    return (sp, step+1)
                 elif point == 1:
                     to_visit.append((sp, step+1))
+
+
+def fill_map(points, start):
+    visited = set()
+    to_visit = [start]
+
+    mins = -1
+    while to_visit:
+
+        new_to_visit = []
+        while to_visit:
+            pos = to_visit.pop()
+            visited.add(pos)
+            points[pos] = 2
+
+            for sp in get_surrounding_points(pos):
+                if sp not in visited and points.get(sp, 0) == 1:
+                    new_to_visit.append(sp)
+        to_visit = new_to_visit
+        mins += 1
+    return mins
 
 
 def plot_map(intcode):
@@ -84,13 +109,17 @@ def plot_map(intcode):
 
 
 def main(data, part=None):
-    intcode = Intcode(list(map(int, data[0].split(","))))
+    intcode = Intcode(list(map(int, lines[0].split(","))))
     points = plot_map(intcode)
 
+    oxygen, steps = navigate_map(points, (0, 0))
+
     if part == 1:
-        return navigate_map(points)
+        return steps
+    elif part == 2:
+        return fill_map(points, oxygen)
 
 
 if __name__ == '__main__':
     print(f'Part 1 {main(lines, 1)}')
-    # print(f'Part 2 {main(lines, 2)}')
+    print(f'Part 2 {main(lines, 2)}')
