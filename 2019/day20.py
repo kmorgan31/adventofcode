@@ -2,90 +2,74 @@
 
 from aocd import lines
 
-from day20_example import (
-    EXAMPLE,
-    EXAMPLE_INCREASE_DEPTH,
-    EXAMPLE_DECREASE_DEPTH
-)
-from day20_example2 import (
-    EXAMPLE_2,
-    EXAMPLE_2_INCREASE_DEPTH,
-    EXAMPLE_2_DECREASE_DEPTH
-)
+# from day20_example import (
+#     EXAMPLE,
+#     EXAMPLE_INCREASE_DEPTH,
+#     EXAMPLE_DECREASE_DEPTH
+# )
+# from day20_example2 import (
+#     EXAMPLE_2,
+#     EXAMPLE_2_INCREASE_DEPTH,
+#     EXAMPLE_2_DECREASE_DEPTH
+# )
+
+
+class Portal:
+    def __init__(self, name, inner, outer):
+        self.name = name
+        self.inner = inner
+        self.outer = outer
+
+
+portals = [
+    Portal("YY", (28, 73), (2, 65)),
+    Portal("YI", (28, 41), (2, 31)),
+    Portal("ER", (28, 35), (81, 2)),
+    Portal("VB", (28, 45), (71, 2)),
+    Portal("WT", (28, 61), (65, 2)),
+    Portal("UH", (28, 53), (114, 67)),
+    Portal("LD", (28, 63), (53, 112)),
+    Portal("JR", (28, 79), (114, 37)),
+    Portal("LH", (71, 28), (2, 59)),
+    Portal("KB", (45, 28), (35, 112)),
+    Portal("FR", (37, 28), (114, 49)),
+    Portal("BI", (53, 28), (114, 81)),
+    Portal("SG", (65, 28), (114, 57)),
+    Portal("DU", (77, 28), (85, 112)),
+    Portal("HM", (88, 55), (2, 77)),
+    Portal("RX", (88, 59), (39, 2)),
+    Portal("YT", (88, 47), (57, 2)),
+    Portal("BB", (88, 77), (57, 112)),
+    Portal("KU", (88, 67), (75, 112)),
+    Portal("TS", (88, 37), (114, 63)),
+    Portal("PO", (39, 86), (2, 39)),
+    Portal("JJ", (35, 86), (2, 51)),
+    Portal("NS", (73, 86), (2, 67)),
+    Portal("QG", (81, 86), (2, 73)),
+    Portal("PU", (65, 86), (43, 2)),
+    Portal("YB", (47, 86), (39, 112)),
+    Portal("JN", (59, 86), (65, 112)),
+]
 
 
 # inner to outer
-INCREASE_DEPTH = {
-    (28, 73): (2, 65),      # YY
-    (28, 41): (2, 31),      # YI
-    (28, 35): (81, 2),      # ER
-    (28, 45): (71, 2),      # VB
-    (28, 61): (65, 2),      # WT
-    (28, 53): (114, 67),    # UH
-    (28, 63): (53, 112),    # LD
-    (28, 79): (114, 37),    # JR
-    (71, 28): (2, 59),      # LH
-    (45, 28): (35, 112),    # KB
-    (37, 28): (114, 49),    # FR
-    (53, 28): (114, 81),    # BI
-    (65, 28): (114, 57),    # SG
-    (77, 28): (85, 112),    # DU
-    (88, 55): (2, 77),      # HM
-    (88, 59): (39, 2),      # RX
-    (88, 47): (57, 2),      # YT
-    (88, 77): (57, 112),    # BB
-    (88, 67): (77, 112),    # KU
-    (88, 37): (114, 63),    # TS
-    (39, 86): (2, 39),      # PO
-    (35, 86): (2, 51),      # JJ
-    (73, 86): (2, 67),      # NS
-    (81, 86): (2, 73),      # QG
-    (65, 86): (43, 2),      # PU
-    (47, 86): (39, 112),    # YB
-    (59, 86): (65, 112),    # JN
-}
+INCREASE_DEPTH = {p.inner: p.outer for p in portals}
 
 # outer to inner
-DECREASE_DEPTH = {
-    (2, 31): (28, 41),      # YI
-    (2, 39): (39, 86),      # PO
-    (2, 51): (35, 86),      # JJ
-    (2, 59): (71, 28),      # LH
-    (2, 65): (28, 73),      # YY
-    (2, 67): (73, 86),      # NS
-    (2, 73): (81, 86),      # QG
-    (2, 77): (88, 55),      # HM
-    (39, 2): (88, 59),      # RX
-    (81, 2): (28, 35),      # ER
-    (71, 2): (28, 45),      # VB
-    (65, 2): (28, 61),      # WT
-    (43, 2): (65, 86),      # PU
-    (57, 2): (88, 47),      # YT
-    (114, 67): (28, 53),    # UH
-    (114, 37): (28, 79),    # JR
-    (114, 49): (37, 28),    # FR
-    (114, 81): (53, 28),    # BI
-    (114, 57): (65, 28),    # SG
-    (114, 63): (88, 37),    # TS
-    (35, 112): (45, 28),    # KB
-    (53, 112): (28, 63),    # LD
-    (85, 112): (77, 28),    # DU
-    (39, 112): (47, 86),    # YB
-    (65, 112): (59, 86),    # JN
-    (57, 112): (88, 77),    # BB
-    (77, 112): (88, 67),    # KU
-}
+DECREASE_DEPTH = {p.outer: p.inner for p in portals}
 
 
 class Maze:
 
     def __init__(self, data, start, end):
-        self.maze = {}
         self.start = start
         self.end = end
+
         self.parse_data(data)
+        self.get_boundaries()
 
     def parse_data(self, data):
+        self.maze = {}
         for x, line in enumerate(data):
             for y, l in enumerate(line):
                 pos = (x, y)
@@ -93,8 +77,10 @@ class Maze:
                 if l in ["#", "."]:
                     self.maze[pos] = l
 
+    def get_boundaries(self):
         xvals = [x for x, _ in self.maze]
         yvals = [y for _, y in self.maze]
+
         self.min_x, self.max_x = min(xvals), max(xvals)
         self.min_y, self.max_y = min(yvals), max(yvals)
 
@@ -120,35 +106,14 @@ class Maze:
                     line += " "
             print(line)
 
-    def get_surrounding_points(self, pos, depth):
+    def get_surrounding_points(self, pos):
         x, y = pos
-        surrounding_points = [
-            (sp, depth) for sp in [
-                (x, y-1),
-                (x, y+1),
-                (x-1, y),
-                (x+1, y)
-            ]
-            if self.min_x <= sp[0] <= self.max_x and
-            self.min_y <= sp[1] <= self.max_y
+        return [
+            (x, y-1),
+            (x, y+1),
+            (x-1, y),
+            (x+1, y)
         ]
-
-        if pos in DECREASE_DEPTH:
-            surrounding_points.append((DECREASE_DEPTH[pos], depth-1))
-        elif pos in INCREASE_DEPTH:
-            surrounding_points.append((INCREASE_DEPTH[pos], depth+1))
-
-        # if EXAMPLE_DECREASE_DEPTH.get(pos):
-        #     surrounding_points.append((EXAMPLE_DECREASE_DEPTH.get(pos), depth-1))
-        # elif EXAMPLE_INCREASE_DEPTH.get(pos):
-        #     surrounding_points.append((EXAMPLE_INCREASE_DEPTH.get(pos), depth+1))
-
-        # if EXAMPLE_2_DECREASE_DEPTH.get(pos):
-        #     surrounding_points.append((EXAMPLE_2_DECREASE_DEPTH.get(pos), depth-1))
-        # elif EXAMPLE_2_INCREASE_DEPTH.get(pos):
-        #     surrounding_points.append((EXAMPLE_2_INCREASE_DEPTH.get(pos), depth+1))
-
-        return surrounding_points
 
     def shortest_path(self, start, end):
         visited = set()
@@ -156,49 +121,53 @@ class Maze:
         to_visit = [(start, 0)]         # steps, curr_pos
         while to_visit:
             pos, steps = to_visit.pop(0)
+            x, y = pos
             visited.add(pos)
 
             if pos == end:
                 return steps
 
-            for sp, depth in self.get_surrounding_points(pos, 0):
+            for sp in self.get_surrounding_points(pos):
                 if self.maze.get(sp, "#") == "." and sp not in visited:
                     to_visit.append((sp, steps+1))
-
-            # self.print_maze(pos, to_visit=to_visit)
-            # import pdb; pdb.set_trace()
 
     def shortest_path_2(self, start, end):
         visited = set()
 
         steps = 0
-        to_visit = [(start, 0)]         # pos, depth, steps
+        to_visit = [(start, 0, 0)]         # pos, depth, steps
         while to_visit:
 
-            new_to_visit = []
-            for x in to_visit:
-                pos, depth = x
-                if depth == 0 and pos == end:
-                    return steps
+            pos, depth, steps = to_visit.pop(0)
+            if depth == 0 and pos == end:
+                return steps
 
-                visited.add((pos, depth))
+            for sp in self.get_surrounding_points(pos):
+                ndepth = depth
+                # sp takes us through an inner portal
+                if self.is_inner_portal(sp):
+                    # go through, increase depth
+                    ndepth += 1
+                    sp = INCREASE_DEPTH[pos]
+                elif self.is_outer_portal(sp) and pos not in [start, end]:
+                    # go through, decrease depth
+                    ndepth -= 1
+                    sp = DECREASE_DEPTH[pos]
 
-                for sp, depth in self.get_surrounding_points(pos, depth):
-                    if depth < 0 or (sp, depth) in visited:
-                        continue
-                    if self.maze.get(sp, "#") == ".":
-                        new_to_visit.append((sp, depth))
+                if ndepth < 0 or (sp, ndepth) in visited:
+                    continue
+                visited.add((sp, ndepth))
 
-            if steps > 1 and steps % 1000 == 0:
-                depths = [x[1] for x in new_to_visit]
-                a, b = min(depths), max(depths)
-                print(f"step {steps}, to_visit {len(new_to_visit)} pos, in levels {a} to {b}")
+                if self.maze.get(sp, "#") == ".":
+                    to_visit.append((sp, ndepth, steps+1))
 
-                # self.print_maze(pos, to_visit=new_to_visit)
-                # import pdb; pdb.set_trace()
+    def is_outer_portal(self, pos):
+        x, y = pos
+        return x < self.min_x or y < self.min_y or x > self.max_x or y > self.max_y
 
-            to_visit = new_to_visit
-            steps += 1
+    def is_inner_portal(self, pos):
+        x, y = pos
+        return 28 < x < 88 and 28 < y < 86
 
 
 def main(data, part=None):
@@ -210,16 +179,16 @@ def main(data, part=None):
     # start, end = (34, 15), (2, 13)
 
     # input
-    start, end = (77, 2), (114, 43)
+    AA, ZZ = (77, 2), (114, 43)
 
-    maze = Maze(data, start, end)
+    maze = Maze(data, AA, ZZ)
     if part == 1:
-        return maze.shortest_path(start, end)
+        return maze.shortest_path(AA, ZZ)
     elif part == 2:
-        return maze.shortest_path_2(start, end)
+        return maze.shortest_path_2(AA, ZZ)
 
 
 if __name__ == '__main__':
     # print(f'Example {main(EXAMPLE_2, 2)}')
-    # print(f'Part 1 {main(lines, 1)}')
+    print(f'Part 1 {main(lines, 1)}')
     print(f'Part 2 {main(lines, 2)}')
