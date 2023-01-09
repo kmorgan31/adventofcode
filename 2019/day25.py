@@ -101,6 +101,7 @@ def main(data, part=None):
             # try lock
             response = try_lock(intcode)
             if "Security Checkpoint" not in response:
+                print(response)
                 return int(re.findall(r'\d+', response)[0])
 
 
