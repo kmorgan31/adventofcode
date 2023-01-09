@@ -2,8 +2,6 @@
 
 from aocd import lines
 
-import re
-
 EXAMPLE = [
     "FBFBBFFRLR",
     "BFFFBBFRRR",
