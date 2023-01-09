@@ -63,6 +63,23 @@ class Intcode:
             else self.extra_memory
         )[z] = val
 
+    def parse_ascii_output(self):
+        ans = []
+
+        line = ""
+        for o in self.output:
+            x = chr(o)
+            if x == '\n':
+                ans.append(line)
+                line = ""
+            else:
+                line += x
+        return ans
+
+    def give_ascii_input(self, instruction):
+        self.inputs.extend([ord(x) for x in instruction])
+        self.inputs.append(10)
+
     def run_instructions(self, i=None):
         self.add_input(i)
         self.output = []
