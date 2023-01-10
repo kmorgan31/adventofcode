@@ -8,18 +8,15 @@ INPUT = "qzyelonm"
 
 
 def first_triplet(hash):
-    i = 0
     for i in range(len(hash)-2):
         if len(set(hash[i:i+3])) == 1:
             return hash[i]
-        i += 1
 
 
 def first_quintuplet(hash):
     for i in range(len(hash)-4):
         if len(set(hash[i:i+5])) == 1:
             return hash[i]
-        i += 1
 
 
 def stretch_word(word, stretch_key):
