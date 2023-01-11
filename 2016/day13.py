@@ -1,13 +1,5 @@
 #!/usr/bin/python
 
-EXAMPLE = [
-    "cpy 41 a",
-    "inc a",
-    "inc a",
-    "dec a",
-    "jnz a 2",
-    "dec a",
-]
 
 INPUT = 1358
 
