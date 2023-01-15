@@ -1,183 +1,183 @@
 #!/usr/bin/python
 
-# from aocd import lines
-
-# import re
+from aocd import lines
 
 from copy import deepcopy
 from itertools import combinations
-# from collections import defaultdict
-
-EXAMPLE = {
-    0: {
-        "G": [],
-        "M": ["H", "L"]
-    },
-    1: {
-        "G": ["H"],
-        "M": [],
-    },
-    2: {
-        "G": ["L"],
-        "M": [],
-    },
-    3: {
-        "G": [],
-        "M": []
-    }
-}
-
-INPUT = {}
 
 
-def print_state(state, e=None):
-    for i in range(3, -1, -1):
-        line = [f"F{i}"]
-        if e == i:
-            line.append("E")
-        else:
-            line.append(".")
+EXAMPLE = [
+    ["HM", "LM"],
+    ["HG"],
+    ["LG"],
+    []
+]
 
-        for g in state[i]["G"]:
-            line.append(f"{g}G")
-        for m in state[i]["M"]:
-            line.append(f"{m}M")
-        print(' '.join(line))
-    print()
+"""
+A: promethium
+B: cobalt
+C: curium
+D: ruthenium
+E: plutonium
+"""
+INPUT = [
+    ["AG", "AM"],
+    ["BG", "CG", "DG", "EG"],
+    ["BM", "CM", "DM", "EM"],
+    []
+]
 
 
-def next_levels(e):
-    # gives possible next levels for e
-    next_levels = {e+1, e-1}
-    return {x for x in next_levels if 0 <= x <= 3}
+def check_level_parts(parts):
+    ms = [part for part in parts if "M" in parts]
+    gs = [part for part in parts if "G" in parts]
 
+    unmatched_ms = set(ms) - set(gs)
+    unmatched_gs = set(gs) - set(ms)
 
-def check_validity(state):
-    # only one XOR of M and G has entries, or neither, per level
-    for level in range(4):
-        gs = set(state[level]["G"]) - set(state[level]["M"])
-        ms = set(state[level]["M"]) - set(state[level]["G"])
-
-        if len(gs) == 0 and len(ms) == 0:
-            # none unmatched
-            continue
-        if len(ms) > 0 and len(state[level]["G"]) == 0:
-            # only Ms
-            continue
-        if len(gs) > 0 and len(state[level]["M"]) == 0:
-            # only Gs
-            continue
-        if len(gs) > 0 and len(ms) == 0:
-            # we can have unmatched Gs as long as all Ms are matched
-            continue
-        if len(gs) > 0 and len(ms) > 0 and gs != ms:
-            # unmatched Gs and Ms
-            return False
-        if len(gs) == 0 and len(ms) > 0:
-            # extra ms will be vaporized by G
-            return False
+    if len(unmatched_ms) > 0 and len(gs) > 0 and len(unmatched_gs) == 0:
+        # extra ms after matching GMs; pair will fry unmatched Ms
+        return False
+    if len(unmatched_ms) > 0 and len(unmatched_gs) > 0:
+        # unmatched Gs and Ms
+        return False
     return True
 
 
-def empty_elevator(state, contents):
-    # empty elevator
-    nstate = deepcopy(state)
-    for level, mg, t in contents:
-        # find where mg used to be and remove it
-        for nl in next_levels(level):
-            if mg in nstate[nl][t]:
-                nstate[nl][t].remove(mg)
+def check_valid_move(floors, elevel, n_elevel, econtents):
+    # can the elevator move the elevator contents (1 or 2)
+    # from floor `elevel` to floor `n_elevel`?
 
-        # add mg to level
-        nstate[level][t].append(mg)
-    return nstate
+    # get parts on n_elevel
+    nelevel_parts = list(floors[n_elevel])
+
+    # add parts to list
+    nelevel_parts += econtents
+
+    # check that level is valid
+    if not check_level_parts(nelevel_parts):
+        return False
+
+    elevel_parts = list(floors[elevel])
+    # ensure the parts being moved were coming from the correct floor
+    if any(part not in elevel_parts for part in econtents):
+        return False
+
+    # remove parts from current floor
+    for part in econtents:
+        elevel_parts.remove(part)
+
+    # ensure removing part doesn't cause an unmatched M
+    if not check_level_parts(elevel_parts):
+        return False
+
+    return True
 
 
-def main(data, num_parts=None):
-    elevator = (0, [])
+def make_move(floors, elevel, n_elevel, econtents, steps):
+    nfloors = deepcopy(floors)
 
-    previous_states = []
-    next_states = [(elevator, data, 0)]  # elevator (level, contents), state, steps
-    while True:
-        elevator, state, steps = next_states.pop(0)
-        if len(state[3]) == num_parts:
+    # check that move is valid
+    if not check_valid_move(nfloors, elevel, n_elevel, econtents):
+        return False
+
+    # do move
+    for p in econtents:
+        nfloors[n_elevel].append(p)
+        nfloors[elevel].remove(p)
+
+    # sort nlevel part
+    nfloors[n_elevel] = sorted(nfloors[n_elevel])
+
+    # track state of nelevel + nfloors
+    floors_state = [
+        n_elevel,       # elevator new level
+        [0, 0, 0],      # unmatched Ms, matched Ms, unmatched Gs
+        [0, 0, 0],
+        [0, 0, 0],
+        [0, 0, 0]
+    ]
+    for i, floor in enumerate(nfloors):
+        for part in floor:
+            if part[1] == "M":
+                if part[0] + "G" not in floor:
+                    floors_state[i+1][0] += 1
+                else:
+                    floors_state[i+1][2] += 1
+            else:
+                if part[0] + "M" not in floor:
+                    floors_state[i+1][1] += 1
+
+    return [nfloors, n_elevel, floors_state, steps+1]
+
+
+def print_floors(floors, steps):
+    print(f"Steps: {steps}")
+    for f in floors[::-1]:
+        print(f)
+    print()
+
+
+def main(floors, total_num_parts):
+    seen = []
+    moves = []
+    print_floors(floors, 0)
+
+    # do initial step - moving items from F1 to F2, either in singles or in pairs
+    for part in floors[0]:
+        move = make_move(floors, 0, 1, [part], 0)
+        if move is not False and move[2] not in seen:
+            moves.append(move)
+            seen.append(move[2])
+
+    for p1, p2 in combinations(floors[0], 2):
+        move = make_move(floors, 0, 1, [p1, p2], 0)
+        if move is not False and move[2] not in seen:
+            moves.append(move)
+            seen.append(move[2])
+
+    while moves:
+        floors, elevel, state, steps = moves.pop(0)
+        # print_floors(floors, steps)
+        if len(floors[3]) == total_num_parts:
+            # top floor has all parts
             return steps
 
-        elevel, econtents = elevator
-        if econtents:
-            nstate = empty_elevator(state, econtents)
-            #  check if state if valid and hasn't been done before, if not, abort state
-            if not check_validity(nstate) or nstate in previous_states:
-                # don't wanna keep going back and forth
+        for p1 in floors[elevel]:
+            if elevel < 3:
+                # move single parts up
+                move = make_move(floors, elevel, elevel+1, [p1], steps)
+                if move is not False and move[2] not in seen:
+                    moves.append(move)
+                    seen.append(move[2])
+
+                # move pairs of parts up
+                for p1, p2 in combinations(floors[elevel], 2):
+                    move = make_move(floors, elevel, elevel+1, [p1, p2], steps)
+                    if move is not False and move[2] not in seen:
+                        moves.append(move)
+                        seen.append(move[2])
+
+            if elevel > 1 and all(len(floors[x]) == 0 for x in range(1, elevel)):
+                # lower levels are all empty, don't move anything down
                 continue
-            else:
-                state = nstate
 
-        previous_states.append(deepcopy(state))
-        print_state(state, e=elevel)
-        # import pdb; pdb.set_trace()
+            if elevel > 0:
+                # move single parts down
+                move = make_move(floors, elevel, elevel-1, [p1], steps)
+                if move is not False and move[2] not in seen:
+                    moves.append(move)
+                    seen.append(move[2])
 
-        # get next levels from current level
-        nlevels = next_levels(elevator[0])
-
-        # determine what we can take
-        # 1. we can take M if corresponding G is on next_level
-        possible_moves = []
-        for nl in nlevels:
-            for m in state[elevel]["M"]:
-                if m in state[nl]["G"]:
-                    # matching generator; possible to move
-                    possible_moves.append((nl, m, "M"))
-
-        # 2. we can take G if M in next_level are matched, or unmatched M will be matched with G
-        for nl in nlevels:
-            for g in state[elevel]["G"]:
-                unmatched = set(state[nl]["M"]) - set(state[nl]["G"])
-                if len(unmatched) == 0 or (len(unmatched) == 1 and unmatched.pop() == g):
-                    possible_moves.append((nl, g, "G"))
-
-        if len(possible_moves) == 1:
-            pm = possible_moves.pop()
-            next_states.append(((pm[0], [pm]), deepcopy(state), steps+1))
-        else:
-            p_next_states = set()
-            for p1, p2 in combinations(possible_moves, 2):
-                if (p1[0] == p2[0] and p1[1] != p2[1] and p1[2] == p2[2]
-                        and (p1, p2) not in p_next_states):
-                    # both generators/mchips going to the same floor, they can go together
-                    next_states.append(((p1[0], [p1, p2]), deepcopy(state), steps+1))
-                    p_next_states.add((p1, p2))
-                else:
-                    # generators and mchips don't match or going to different level;
-                    # they have to go separately
-                    if p1 not in p_next_states:
-                        next_states.append(((p1[0], [p1]), deepcopy(state), steps+1))
-                        p_next_states.add(p1)
-                    if p2 not in p_next_states:
-                        next_states.append(((p2[0], [p2]), deepcopy(state), steps+1))
-                        p_next_states.add(p2)
-
-        # 4. we can take a pair of G and M
-        # 4b. we can break up a pair that's already been made
-        # if that leads to an invalid state, it will be cleaned up in the next iteration
-        p_next_states = set()
-        for m in state[elevel]["M"]:
-            if m in state[elevel]["G"]:
-                for nl in nlevels:
-                    if ((nl, m, "G"), (nl, m, "M")) not in p_next_states:
-                        next_states.append(((nl, [(nl, m, "G"), (nl, m, "M")]), state.copy(), steps+1))
-                        p_next_states.add(((nl, m, "G"), (nl, m, "M")))
-                    if ((nl, m, "G")) not in p_next_states:
-                        next_states.append(((nl, [(nl, m, "G")]), state.copy(), steps+1))
-                        p_next_states.add((nl, m, "G"))
-                    if ((nl, m, "M")) not in p_next_states:
-                        next_states.append(((nl, [(nl, m, "M")]), state.copy(), steps+1))
-                        p_next_states.add((nl, m, "M"))
-
-        # import pdb; pdb.set_trace()
+                # move pairs of parts down
+                for p1, p2 in combinations(floors[elevel], 2):
+                    move = make_move(floors, elevel, elevel-1, [p1, p2], steps)
+                    if move is not False and move[2] not in seen:
+                        moves.append(move)
+                        seen.append(move[2])
 
 
 if __name__ == '__main__':
-    print(f'EXAMPLE {main(EXAMPLE, 4)}')
-    # print(f'Part 1 {main(INPUT, 10)}')
+    # print(f'EXAMPLE {main(EXAMPLE, 4)}')
+    print(f'Part 1 {main(INPUT, 10)}')
     # print(f'Part 2 {main(lines, 2)}')

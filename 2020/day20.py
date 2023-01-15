@@ -141,6 +141,7 @@ class Tile:
             "left": ''.join([self.grid[x][0] for x in range(10)])
         }
 
+
 def parse_data(data):
     tile_id, tile = None, []
 
@@ -149,7 +150,7 @@ def parse_data(data):
 
         if not line:
             # create tile
-            tiles.append(Tile(tile_id, tile))
+            tiles[tile_id] = Tile(tile_id, tile)
 
             # reset
             tile_id, tile = None, []
