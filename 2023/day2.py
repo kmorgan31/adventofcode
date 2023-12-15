@@ -1,5 +1,4 @@
 #!/usr/bin/python
-# AOC_SESSION: 53616c7465645f5fc4d1838d6c26850845cb7f79b05413c2b6943f5e387aad806bbd2298cce594f8f0cd7053b0191c213323b1295f5491f6b5295c984461a77a
 
 from aocd import lines
 
@@ -11,12 +10,7 @@ EXAMPLE = [
     "Game 3: 8 green, 6 blue, 20 red; 5 blue, 4 red, 13 green; 5 green, 1 red",
     "Game 4: 1 green, 3 red, 6 blue; 3 green, 6 red; 3 green, 15 blue, 14 red",
     "Game 5: 6 red, 1 blue, 3 green; 2 blue, 1 red, 2 green",
-    # "Game 1: 1 blue, 8 green; 14 green, 15 blue; 3 green, 9 blue; 8 green, 8 blue, 1 red; 1 red, 9 green, 10 blue"
 ]
-
-R = 12
-G = 13
-B = 14
 
 
 def determine_pull_color_amounts(pull):
@@ -38,7 +32,7 @@ def part_1(data):
         for pull in pulls:
             pdct = determine_pull_color_amounts(pull)
 
-            if pdct['red'] > R or pdct['blue'] > B or pdct['green'] > G:
+            if pdct['red'] > 12 or pdct['blue'] > 13 or pdct['green'] > 14:
                 valid = False
                 break
 
@@ -66,7 +60,5 @@ def part_2(data):
 
 
 if __name__ == '__main__':
-    # print(f'Day 2: Part 1 {part_1(lines)}')
-    # print(f'Day 1: Part 1 {main(lines, 1)}')
+    print(f'Day 2: Part 1 {part_1(lines)}')
     print(f'Day 2: Part 2 {part_2(lines)}')
-    # print(f'Day 1: Part 2 {main(lines, 2)}')
